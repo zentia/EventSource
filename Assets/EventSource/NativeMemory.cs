@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
-using UnityEngine;
 
 public unsafe class NativeMemory
 {
     public enum NativeMemoryType
     {
         None,
+        RawList,
         Count,
     }
 
@@ -86,6 +84,27 @@ public unsafe class NativeMemory
         for (int i = 0; i < c; i++)
         {
             p[i] = 0;
+        }
+    }
+
+    public static void Copy(byte *src, byte* dest, int c)
+    {
+        if (c >= 16)
+        {
+            int* p = (int*)src;
+            int* d = (int*) dest;
+            int n = c / sizeof(int);
+            for (int i = 0; i < n; i++)
+            {
+                d[i] = p[i];
+            }
+            c %= sizeof(int);
+            src = src + n * sizeof(int);
+            dest = dest + n * sizeof(int);
+        }
+        for (int i = 0; i < c; i++)
+        {
+            dest[i] = src[i];
         }
     }
 }

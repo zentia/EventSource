@@ -1,7 +1,8 @@
-﻿using Unity.Collections.LowLevel.Unsafe;
+﻿using System;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 
-unsafe struct UnsafeListData
+struct UnsafeListData
 {
     public ulong arrayPtr;
     public int length;
@@ -10,7 +11,7 @@ unsafe struct UnsafeListData
     public const int SIZE = 20;
 }
 
-public unsafe class UnsafeList<T> where T : struct
+public unsafe class UnsafeList<T> : IDisposable where T : struct
 {
     private UnsafeListData* data;
 
@@ -18,14 +19,14 @@ public unsafe class UnsafeList<T> where T : struct
     {
         get { return data->length; }
     }
-    public int catacity
+    public int capacity
     { get { return data->capacity; } }
 
     public UnsafeList(int capacity = 10)
     {
         if (capacity < 1) capacity = 1;
         data = (UnsafeListData*) UnsafeUtility.Malloc(UnsafeListData.SIZE, 16, Allocator.Persistent);
-        data->structSize = (uint) UnsafeUtility.SizeOf<T>();
+        data->structSize = (uint) UnsafeUtility.SizeOf<T>(); 
         data->capacity = capacity;
         data->length = 0;
         data->arrayPtr = (ulong) UnsafeUtility.Malloc(data->structSize * data->capacity, 16, Allocator.Persistent);
@@ -111,5 +112,6 @@ public unsafe class UnsafeList<T> where T : struct
     {
         UnsafeUtility.Free((void*)data->arrayPtr, Allocator.Persistent);
         UnsafeUtility.Free(data, Allocator.Persistent);
+        GC.SuppressFinalize(true);// 告诉GC不需要再调用该对象的析构方法，否则，GC仍会判断该对象不再有用后调用其析构方法，虽然程序不会出错，但影响系统性能
     }
 }
